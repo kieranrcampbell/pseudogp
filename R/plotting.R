@@ -34,6 +34,64 @@ posteriorBoxplot <- function(fit, inner = 0.75, outer = 0.95) {
 }
 
 #' Posterior curve plot (workhorse of the analysis)
-posteriorCurvePlot <- function(X, fit, ...) {
+#'
+#' @export
+posteriorCurvePlot <- function(X, fit, nsamples = 50, nnt = 80, ...) {
+  Ns <- length(X) ## number of representations
+  chains <- length(fit@inits)
+  message(paste("Plotting traces for", Ns,"representations and", chains, "chains"))
 
+  plots <- vector("list", Ns)
+  # this is of dim trace-chain-cell
+  pst <- extract(fit, pars = "t", permute = FALSE)
+  lambda <- extract(fit, pars = "lambda", permute = FALSE)
+  sigma <- extract(fit, pars = "sigma", permute = FALSE)
+  for(i in 1:Ns) {
+    l <- lambda[,,(2*i - 1):(2*i)]
+    s <- sigma[,,(2*i - 1):(2*i)]
+    plt <- makeEnvelopePlot(pst, l, s, X[[i]], chains, nsamples, nnt)
+    plots[[i]] <- plt
+  }
+  gplt <- cowplot::plot_grid(plotlist = plots, labels = names(X))
+  return( gplt )
+}
+
+makeEnvelopePlot <- function(pst, l, s, x, chains, ncurves, nnt) {
+  n_posterior_samples <- dim(pst)[1]
+  curve_samples <- sample(n_posterior_samples, ncurves)
+  pmcs <- lapply(1:chains, function(chain) {
+    lapply(curve_samples, function(i) {
+      t <- pst[i,chain,]
+      lambda <- l[i,chain,]
+      sigma <- s[i,chain,]
+      posterior_mean_curve(x, t, l, s, nnt)
+    })
+  })
+
+  x <- as.data.frame(x)
+  names(x) <- c("x1", "x2")
+  plt <- ggplot()
+  plt <- plt + geom_point(data = data.frame(x), aes(x = x1, y = x2), shape = 21,
+                          fill = 'black', colour = 'white', size = 3, alpha = 0.5) +
+    xlab("") + ylab("")
+
+  getPalette <- colorRampPalette(brewer.pal(9, "Set1"))
+  colorset <-getPalette(chains + 1)
+
+  for(chain in 1:chains) {
+    pmc <- pmcs[[chain]]
+    ncurves <- length(pmc)
+    mus <- lapply(pmc, function(p) p$mu)
+    M <- data.frame(do.call("rbind", mus))
+    names(M) <- c("M1", "M2")
+    M$curve <- rep(1:ncurves, each = nrow(mus[[1]]))
+    M$nt <- unlist(lapply(pmc, function(x) x$t))
+    M <- dplyr::arrange(M, curve, nt)
+
+    for(i in 1:ncurves) {
+      plt <- plt + geom_path(data = dplyr::filter(M, curve == i), aes(x = M1, y = M2),
+                             size = 2, alpha = .2, color = colorset[chain])
+    }
+  }
+  return( plt )
 }

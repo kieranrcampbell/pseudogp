@@ -4,7 +4,7 @@
 \alias{posteriorCurvePlot}
 \title{Posterior curve plot (workhorse of the analysis)}
 \usage{
-posteriorCurvePlot(X, fit, ...)
+posteriorCurvePlot(X, fit, nsamples = 50, nnt = 80, ...)
 }
 \description{
 Posterior curve plot (workhorse of the analysis)

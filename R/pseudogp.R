@@ -2,7 +2,7 @@
 #' Fit probabilistic pseudotime model
 #'
 #' @export
-fitPseudotime <- function(X, smoothing_mean = 6, smoothing_var = 1,
+fitPseudotime <- function(X, smoothing_mean = 3, smoothing_var = 1,
                           pseudotime_mean = 0.5, pseudotime_var = 1,
                           chains = 1, iter = 1000, ...) {
   ## find number of representations

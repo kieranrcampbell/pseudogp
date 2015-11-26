@@ -10,4 +10,4 @@ License: MIT
 LazyData: TRUE
 Suggests: knitr
 VignetteBuilder: knitr
-Depends: rstan, coda, matrixStats
+Depends: rstan, coda, matrixStats, RColorBrewer

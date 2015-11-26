@@ -32,7 +32,15 @@ ggplot(X) + geom_point(aes(x = x1, y = x2)) + facet_wrap( ~ representation) + th
 
 Now we can prepare data and call the stan fit
 
-```{r stanfit}
-data <- list(monocle_le, monocle_pca, monocle_tsne)
-fit <- fitPseudotime(data, smoothing_mean = 6, smoothing_var = 1, chains = 2, iter = 10)
+```{r stanfit, cache=TRUE}
+data <- list(LE = monocle_le, PCA = monocle_pca, tSNE = monocle_tsne)
+fit <- fitPseudotime(data, chains = 2, iter = 1000)
 ```
+
+We can then use some of the inbuilt plotting functions
+
+```{r boxplot, fig.width = 8, fig.height = 6}
+posteriorBoxplot(fit)
+```
+
+
