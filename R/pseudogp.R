@@ -37,8 +37,11 @@ fitPseudotime <- function(X, smoothing_mean = 6, smoothing_var = 1,
 
   stanfile <- system.file("pseudogp.stan", package = "pseudogp")
 
-  fit <- rstan::fit(file = stanfile, data = data,
+  if(!require(rstan)) stop("Stan required for inference")
+  fit <- stan(file = stanfile, data = data,
                     iter = iter, chains = chains, ...)
+
+  return( fit )
 }
 
 standardize <- function(X) {
@@ -53,5 +56,55 @@ meanvar_to_alphabeta <- function(mean, var) {
   return(c(alpha, beta))
 }
 
+#' Calculate a double exponential covariance matrix
+#' with a diagonal noise component
+cov_matrix <- function(t1, t2, lambda, sigma = NULL) {
+  n1 <- length(t1)
+  n2 <- length(t2)
+  C <- matrix(NA, nrow = n1, ncol = n2)
+  for(i in 1:n1) {
+    for(j in 1:n2) {
+      C[i, j] <- exp(-lambda * (t1[i] - t2[j])^2)
+    }
+  }
+  if(!is.null(sigma)) {
+    stopifnot(n1 == n2)
+    C <- C + sigma * diag(n1)
+  }
+  return ( C )
+}
 
+#' Compute the posterior mean curve
+#'
+#' This computes the posterior mean curve. Note that the "mean" aspect here
+#' doesn't relate to pseudotimes - this can take a pseudotime sample from the
+#' posterior pseudotime distribution and will calculate the mean curve
+#' in the data space.
+#'
+#' @param X The data representation
+#' @param t The pseudotime sample
+#' @param l Lambda
+#' @param s Signa
+#' @param nnt Number of new time points
+posterior_mean_curve <- function(X, t, l, s, nnt = 80) {
+  nt <- runif(nnt)
+  K_y <- lapply(1:2, function(i) cov_matrix(t, t, as.numeric(l[i]), as.numeric(s[i])))
+  K_star <- lapply(1:2, function(i) cov_matrix(t, nt, as.numeric(l[i])))
+  K_dstar <- lapply(1:2, function(i) cov_matrix(nt, nt, as.numeric(l[i])))
 
+  mu_star <- lapply(1:2, function(i) {
+    t(K_star[[i]]) %*% solve(K_y[[i]]) %*% X[,i]
+  })
+
+  mus <- do.call(cbind, mu_star)
+  return(list( mu = mus, t = nt ))
+}
+
+#' Laplacian eigenmaps representation of monocle data
+"monocle_le"
+
+#' PCA representation of monocle data
+"monocle_pca"
+
+#' tSNE representation of monocle data
+"monocle_tsne"

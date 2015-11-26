@@ -34,7 +34,6 @@ parameters {
 model {
   matrix[N, N] Sigma[Ns, P]; // Ns*P covariance matrices
 
-  // off-diagonal
   for(k in 1:Ns) {
     for(l in 1:P) {
       // off-diagonal
@@ -51,7 +50,7 @@ model {
     }
   }
 
-  g ~ gamma(gamma_lower, gamma_upper);
+  g ~ gamma(gamma_alpha, gamma_beta);
 
   for(i in 1:Ns) {
     for(j in 1:P) {
@@ -72,3 +71,5 @@ model {
   }
 
 }
+
+
