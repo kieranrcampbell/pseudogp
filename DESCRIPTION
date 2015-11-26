@@ -1,0 +1,12 @@
+Package: pseudogp
+Type: Package
+Title: Probabilistic pseudotime for single-cell RNA-seq
+Version: 0.1
+Date: 2015-11-26
+Author: Kieran Campbell <kieran.campbell@sjc.ox.ac.uk>
+Maintainer: Kieran Campbell <kieran.campbell@sjc.ox.ac.uk>
+Description: This package fits Bayesian Gaussian Process Latent Variable Models to low-dimensional representations of single-cell RNA-seq data.
+License: MIT
+LazyData: TRUE
+Suggests: knitr
+VignetteBuilder: knitr
