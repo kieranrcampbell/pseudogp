@@ -45,7 +45,7 @@ posteriorBoxplot(fit)
 
 And look at the posterior curves, both means and samples:
 
-```{r boxplot, fig.width = 8, fig.height = 6}
+```{r poscurve-plots, fig.width = 8, fig.height = 6}
 posteriorCurvePlot(data, fit) # plot the mean curve
 posteriorCurvePlot(data, fit, posterior_mean = FALSE) # plot posterior samples
 ```

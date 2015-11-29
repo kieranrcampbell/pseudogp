@@ -84,7 +84,9 @@ makeEnvelopePlot <- function(pst, l, s, x, chains, posterior_mean, ncurves, nnt)
                           fill = 'black', colour = 'white', size = 3, alpha = 0.5) +
     xlab("") + ylab("") + theme_bw()
 
-  getPalette <- colorRampPalette(brewer.pal(min(chains, 9), "Set1"))
+  ncolor <- min(chains, 9)
+  if(ncolor < 3) ncolor <- 3
+  getPalette <- colorRampPalette(brewer.pal(ncolor, "Set1"))
   colorset <-getPalette(chains)
 
   for(chain in 1:chains) {

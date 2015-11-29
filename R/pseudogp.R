@@ -17,7 +17,7 @@ fitPseudotime <- function(X, smoothing_alpha = 10, smoothing_beta = 3,
   stopifnot(ndim == 2)
   Ns <- length(X) # number of representations
 
-  message(paste("Creating pseudotime model with", ncells, "cells and ", Ns, "representation(s)"))
+  message(paste("Creating pseudotime model with", ncells, "cells and", Ns, "representation(s)"))
 
   ## sanity check (e.g. all representations centred)
   message("Standardizing input data")
