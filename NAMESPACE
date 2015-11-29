@@ -2,3 +2,5 @@
 
 export(fitPseudotime)
 export(posteriorBoxplot)
+export(posteriorCurvePlot)
+importFrom(MCMCglmm,posterior.mode)

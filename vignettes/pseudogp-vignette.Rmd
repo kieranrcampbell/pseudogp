@@ -34,13 +34,20 @@ Now we can prepare data and call the stan fit
 
 ```{r stanfit, cache=TRUE}
 data <- list(LE = monocle_le, PCA = monocle_pca, tSNE = monocle_tsne)
-fit <- fitPseudotime(data, chains = 2, iter = 1000)
+fit <- fitPseudotime(data, chains = 2, iter = 1000, smoothing_alpha = 12, smoothing_beta = 3)
 ```
 
 We can then use some of the inbuilt plotting functions
 
 ```{r boxplot, fig.width = 8, fig.height = 6}
 posteriorBoxplot(fit)
+```
+
+And look at the posterior curves, both means and samples:
+
+```{r boxplot, fig.width = 8, fig.height = 6}
+posteriorCurvePlot(data, fit) # plot the mean curve
+posteriorCurvePlot(data, fit, posterior_mean = FALSE) # plot posterior samples
 ```
 
 

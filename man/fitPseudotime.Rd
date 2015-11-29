@@ -4,7 +4,7 @@
 \alias{fitPseudotime}
 \title{Fit probabilistic pseudotime model}
 \usage{
-fitPseudotime(X, smoothing_mean = 6, smoothing_var = 1,
+fitPseudotime(X, smoothing_alpha = 10, smoothing_beta = 3,
   pseudotime_mean = 0.5, pseudotime_var = 1, chains = 1, iter = 1000,
   ...)
 }

@@ -36,7 +36,8 @@ posteriorBoxplot <- function(fit, inner = 0.75, outer = 0.95) {
 #' Posterior curve plot (workhorse of the analysis)
 #'
 #' @export
-posteriorCurvePlot <- function(X, fit, nsamples = 50, nnt = 80, ...) {
+posteriorCurvePlot <- function(X, fit, nsamples = 50, nnt = 80, posterior_mean = TRUE, ...) {
+  if(is.matrix(X)) X <- list(X)
   Ns <- length(X) ## number of representations
   chains <- length(fit@inits)
   message(paste("Plotting traces for", Ns,"representations and", chains, "chains"))
@@ -47,25 +48,33 @@ posteriorCurvePlot <- function(X, fit, nsamples = 50, nnt = 80, ...) {
   lambda <- extract(fit, pars = "lambda", permute = FALSE)
   sigma <- extract(fit, pars = "sigma", permute = FALSE)
   for(i in 1:Ns) {
-    l <- lambda[,,(2*i - 1):(2*i)]
-    s <- sigma[,,(2*i - 1):(2*i)]
-    plt <- makeEnvelopePlot(pst, l, s, X[[i]], chains, nsamples, nnt)
+    l <- lambda[,,(2*i - 1):(2*i),drop=FALSE]
+    s <- sigma[,,(2*i - 1):(2*i),drop=FALSE]
+    plt <- makeEnvelopePlot(pst, l, s, X[[i]], chains, posterior_mean, nsamples, nnt)
     plots[[i]] <- plt
   }
   gplt <- cowplot::plot_grid(plotlist = plots, labels = names(X))
   return( gplt )
 }
 
-makeEnvelopePlot <- function(pst, l, s, x, chains, ncurves, nnt) {
+#' @importFrom MCMCglmm posterior.mode
+makeEnvelopePlot <- function(pst, l, s, x, chains, posterior_mean, ncurves, nnt) {
   n_posterior_samples <- dim(pst)[1]
   curve_samples <- sample(n_posterior_samples, ncurves)
   pmcs <- lapply(1:chains, function(chain) {
-    lapply(curve_samples, function(i) {
-      t <- pst[i,chain,]
-      lambda <- l[i,chain,]
-      sigma <- s[i,chain,]
-      posterior_mean_curve(x, t, l, s, nnt)
-    })
+    if(posterior_mean) {
+      tmap <- posterior.mode(mcmc(pst[,chain,]))
+      lmap <- posterior.mode(mcmc(l[,chain,]))
+      smap <- posterior.mode(mcmc(s[,chain,]))
+      return( list( posterior_mean_curve(x, tmap, lmap, smap, nnt) ) )
+    } else {
+      lapply(curve_samples, function(i) {
+        t <- pst[i,chain,]
+        lambda <- l[i,chain,]
+        sigma <- s[i,chain,]
+        posterior_mean_curve(x, t, l, s, nnt)
+      })
+    }
   })
 
   x <- as.data.frame(x)
@@ -73,10 +82,10 @@ makeEnvelopePlot <- function(pst, l, s, x, chains, ncurves, nnt) {
   plt <- ggplot()
   plt <- plt + geom_point(data = data.frame(x), aes(x = x1, y = x2), shape = 21,
                           fill = 'black', colour = 'white', size = 3, alpha = 0.5) +
-    xlab("") + ylab("")
+    xlab("") + ylab("") + theme_bw()
 
-  getPalette <- colorRampPalette(brewer.pal(9, "Set1"))
-  colorset <-getPalette(chains + 1)
+  getPalette <- colorRampPalette(brewer.pal(min(chains, 9), "Set1"))
+  colorset <-getPalette(chains)
 
   for(chain in 1:chains) {
     pmc <- pmcs[[chain]]
@@ -88,9 +97,12 @@ makeEnvelopePlot <- function(pst, l, s, x, chains, ncurves, nnt) {
     M$nt <- unlist(lapply(pmc, function(x) x$t))
     M <- dplyr::arrange(M, curve, nt)
 
+    alpha <- 0.2
+    if(posterior_mean) alpha <- 1
+
     for(i in 1:ncurves) {
       plt <- plt + geom_path(data = dplyr::filter(M, curve == i), aes(x = M1, y = M2),
-                             size = 2, alpha = .2, color = colorset[chain])
+                             size = 2, alpha = alpha, color = colorset[chain])
     }
   }
   return( plt )

@@ -2,7 +2,7 @@
 #' Fit probabilistic pseudotime model
 #'
 #' @export
-fitPseudotime <- function(X, smoothing_mean = 3, smoothing_var = 1,
+fitPseudotime <- function(X, smoothing_alpha = 10, smoothing_beta = 3,
                           pseudotime_mean = 0.5, pseudotime_var = 1,
                           chains = 1, iter = 1000, ...) {
   ## find number of representations
@@ -10,29 +10,30 @@ fitPseudotime <- function(X, smoothing_mean = 3, smoothing_var = 1,
   if(!is.list(X)) stop("X must either be matrix (for single representation) or list of matrices")
   if(!all(sapply(X, class) == "matrix")) stop("X must either be matrix (for single representation) or list of matrices")
   dims <- sapply(X, dim)
-  if(!all(dims[1,] == dims[1,1]) | !all(dims[2,] == dims[2,2])) stop("All representations must be of same dimensionality")
+  if(!all(dims[1,] == dims[1,1]) | !all(dims[2,] == dims[2,1])) stop("All representations must be of same dimensionality")
 
   ncells <- dim(X[[1]]) [1] # number of cells
   ndim <- dim(X[[1]])[2] # number of dimensions (currently just 2 supported)
   stopifnot(ndim == 2)
   Ns <- length(X) # number of representations
 
-  message(paste("Creating pseudotime model with", ncells, "cells"))
+  message(paste("Creating pseudotime model with", ncells, "cells and ", Ns, "representation(s)"))
 
   ## sanity check (e.g. all representations centred)
   message("Standardizing input data")
   X <- lapply(X, standardize)
 
   ## prepare data
-  alpha_beta <- meanvar_to_alphabeta(smoothing_mean, smoothing_var)
+  #alpha_beta <- meanvar_to_alphabeta(smoothing_mean, smoothing_var)
+  #message(paste("Using hyperparameters", alpha_beta))
 
   # ***always*** order arrays by (representation, latent dimension, cell)
   dx <- array(dim = c(Ns, ndim, ncells))
-  for(i in 1:Ns) dx[i,,] <- X[[i]]
+  for(i in 1:Ns) dx[i,,] <- t(X[[i]])
 
   data <- list(Ns = Ns, P = ndim, N = ncells,
                X = dx,
-               gamma_alpha = alpha_beta[1], gamma_beta = alpha_beta[2],
+               gamma_alpha = smoothing_alpha, gamma_beta = smoothing_beta,
                pseudotime_mean = pseudotime_mean, pseudotime_var = pseudotime_var)
 
   stanfile <- system.file("pseudogp.stan", package = "pseudogp")

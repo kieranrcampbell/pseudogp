@@ -56,7 +56,6 @@ model {
     for(j in 1:P) {
       sigma[i,j] ~ inv_gamma(1.0, 1.0);
       lambda[i,j] ~ exponential(g[i]);
-
     }
   }
 
