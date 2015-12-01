@@ -1,6 +1,42 @@
 
 #' Fit probabilistic pseudotime model
 #'
+#' This method takes one or more reduced-dimension representations of the gene expression
+#' data and returns a one-dimensional Bayesian Gaussian Process latent variable model as
+#' a `stanfit` object. The free parameters `smoothing_alpha` and `smoothing_beta` correspond
+#' to the hyper-hyper distribution on `lambda` which effectively controls the arc-length
+#' and therefore the smoothness of the pseudotime trajectories.
+#'
+#' @param X Either a ncells-by-2 reduced dimension matrix or \code{list} of such matrices
+#' corresponding to multiple representations.
+#' @param smoothing_alpha The hyperparameter for the Gamma distribution that controls arc-length
+#' @param smoothing_beta The hyperparameter for the Gamma distribution that controls arc-length
+#' @param pseudotime_mean The mean of the constrained normal prior on the pseudotimes
+#' @param pseudotime_var The variance of the constrained normal prior on the pseudotimes
+#' @param chains The number of chains for the MCMC trace
+#' @param iter The number of iterations for the MCMC trace
+#' @param ... Additional arguments to be passed to \code{rstan::stan} that can control curve
+#' fitting (ie the HMC inference algorithm)
+#'
+#' @return An object of class \code{rstan::stan}, that contains posterior samples for the
+#' model parameters.
+#'
+#' @details This function essentially wraps the \code{rstan} function \code{stan}, and in doing so
+#' returns a \code{stanfit} object. To extract posterior pseudotime samples see example below.
+#'
+#' @examples
+#' \dontrun{
+#' ## load libraries for MAP and credible intervals:
+#' library(coda)
+#' library(MCMCglmm)
+#' fit <- fitPseudotime(...)
+#' pst <- extract(fit, pars = "t")$t # extract pseudotime from stan object
+#' tmcmc <- mcmc(pst)
+#' tmap <- posterior.mode(tmcmc) # extract MAP estimate of pseudotimes
+#' hpd_intervals <- HPDinterval(tmcmc) # extract HPD credible intervals (95% default)
+#' }
+#'
+#'
 #' @export
 fitPseudotime <- function(X, smoothing_alpha = 10, smoothing_beta = 3,
                           pseudotime_mean = 0.5, pseudotime_var = 1,
@@ -109,3 +145,6 @@ posterior_mean_curve <- function(X, t, l, s, nnt = 80) {
 
 #' tSNE representation of monocle data
 "monocle_tsne"
+
+#' Stan fit for laplacian eigenmaps representation of monocle
+"le_fit"

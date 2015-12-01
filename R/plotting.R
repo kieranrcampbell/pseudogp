@@ -5,6 +5,9 @@
 #' @param inner The inner interval for box 'edges' (default 0.75)
 #' @param outer The outer interval for boxplot whiskers (default 0.95)
 #'
+#' @return A \code{ggplot2} boxplot of posterior pseudotime samples ordered by
+#' median pseudotime.
+#'
 #' @export
 posteriorBoxplot <- function(fit, inner = 0.75, outer = 0.95) {
   # we can essentially infer the number of chains & representations given the dimension

@@ -2,7 +2,9 @@
 title: "Probabilistic pseudotime inference using Bayesian Gaussian Process Latent Variable Models"
 author: "Kieran Campbell"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
+output: 
+  rmarkdown::html_vignette:
+    toc: true
 vignette: >
   %\VignetteIndexEntry{Vignette Title}
   %\VignetteEngine{knitr::rmarkdown}
@@ -11,11 +13,103 @@ vignette: >
 
 ## Introduction
 
-## Bayesian pseudogp fitting
-```{r setup}
-devtools::load_all("~/oxford/pseudogp")
+## A simple example
+
+Let's first trying to fit a probabilistic trajectory to a PCA representation of the _Trapnell et al. (2014)_ dataset. This is included in the package under `monocle_pca`:
+
+```{r simple-pca, warning = FALSE, message = FALSE, fig.width = 5, fig.height=3}
+devtools::load_all("../pseudogp")
 library(ggplot2)
+data(monocle_le)
+
+ggplot(data.frame(monocle_le)) + geom_point(aes(x = X1, y = X2)) + theme_bw()
 ```
+
+Then we can do a simple fit using the `fitPseudotime` function provided by `pseudogp`:
+
+```{r simple-fit, warning = FALSE, message = FALSE, cache=TRUE, eval=FALSE}
+le_fit <- fitPseudotime(monocle_le, smoothing_alpha = 30, smoothing_beta = 6, iter = 1000, chains = 1)
+```
+However, this takes a long time for a vignette, so we can use the `le_fit` example bundled with the package as our reference:
+```{r load-le-fit}
+data(le_fit)
+```
+
+We can plot the posterior curve in the reduced space:
+
+```{r poscurve, warning = FALSE, fig.width = 5, fig.height = 3}
+posteriorCurvePlot(monocle_le, le_fit)
+```
+
+we can plot individual traces by setting `posterior_mean = FALSE`:
+
+```{r ind-trace, fig.width = 5, fig.height = 3}
+posteriorCurvePlot(monocle_le, le_fit, posterior_mean = FALSE)
+```
+
+and we can visualise the uncertainty using a boxplot
+
+```{r simple-boxplot, fig.width = 6, fig.height = 4}
+posteriorBoxplot(le_fit)
+```
+
+## Exracting posterior samples from the `stanfit` object
+
+All the posterior samples of pseudotime and kernel parameters are contained in the object returned by `rstan::stan`. We can use `rstan`'s built in plotting functions to examine the traces of the kernel parameters too. For example, we can look at a boxplot of the lambda parameters or plot the trace of the sigma (noise) parameters:
+
+```{r rstan-plotting, fig.width=6, fig.height=4}
+plot(le_fit, pars="lambda")
+rstan::traceplot(le_fit, pars="sigma")
+```
+
+We can also extract the pseudotime traces from the object using `rstan:extract`:
+
+```{r extract-pst}
+pst <- extract(le_fit, pars="t")$t
+print(str(pst))
+```
+
+We can then use `ggplot2` to plot posterior distributions to get a handle on the uncertainty:
+
+```{r posplot, fig.width=7, fig.height=3, message=FALSE}
+set.seed(1L)
+to_sample <- sample(nrow(monocle_le), 4)
+traces <- data.frame(pst[,to_sample])
+names(traces) <- paste0("Cell",1:4)
+traces_melted <- reshape2::melt(traces, variable.name="Cell", value.name="Pseudotime")
+pstplt <- ggplot(traces_melted) + geom_density(aes(x = Pseudotime, fill = Cell), alpha = 0.5) +
+  theme_bw()
+pstplt
+```
+We can also find the MAP pseudotime estimates using the `posterior.mode` function from the `MCMCglmm` package:
+```{r posmode, fig.width=7, fig.height=3}
+library(MCMCglmm)
+library(coda)
+tmcmc <- mcmc(traces)
+tmap <- posterior.mode(tmcmc)
+for(i in 1:length(tmap)) {
+  pstplt <- pstplt + geom_vline(xintercept = tmap[i], linetype = 2)
+}
+pstplt
+```
+
+## Choice of reduced dimension representation
+
+Gaussian Process Latent Variable Models are brilliant, but not magic. There needs to be some structure in the representation you choose to get a consistent curve fit. Let's look at an example of a representation with 'structure' and one without.
+
+```{r curve-examples, fig.width=6, fig.height=3}
+x <- runif(100, -1, 1)
+y_structured <- rnorm(100, x^2, sd = 0.1)
+y_unstructured <- rnorm(100, x^2, sd = 1)
+dfplt <- data.frame(x, y_structured, y_unstructured)
+dfmelt <- reshape2::melt(dfplt, id.vars = "x", value.name = "y")
+ggplot(dfmelt) + geom_point(aes(x=x, y=y)) + facet_wrap(~variable) + theme_bw()
+```
+
+This method will consistently fit the structured data, but not the unstructured. To test for 'consistency', call `fitPseudotime` with multiple chains (by using the `chains` parameter) and then plot the posterior curves (`posteriorCurvePlot` automatically handles multiple chains and colours each differently). If the curves from each chain line up then you have a consistent fit. If not, look to a different representation of your data or select genes to encourage structure.
+
+## Fitting to multiple reduced dimensional representations simultaneously
+
 
 ```{r firstfit, message = FALSE, warning = FALSE, fig.width=7, fig.height=4}
 ## first let's load the data
@@ -30,24 +124,16 @@ X$representation <- rep(c("LE", "PCA", "tSNE"), each = nrow(monocle_le))
 ggplot(X) + geom_point(aes(x = x1, y = x2)) + facet_wrap( ~ representation) + theme_bw()
 ```
 
-Now we can prepare data and call the stan fit
+Now we can prepare data and call the stan fit. This is left unevaluated here due to the significant runtime. However, all plotting functions can be called as before.
 
-```{r stanfit, cache=TRUE}
+```{r stanfit, cache=TRUE, eval=FALSE}
 data <- list(LE = monocle_le, PCA = monocle_pca, tSNE = monocle_tsne)
 fit <- fitPseudotime(data, chains = 2, iter = 1000, smoothing_alpha = 12, smoothing_beta = 3)
 ```
 
-We can then use some of the inbuilt plotting functions
+## Technical details
 
-```{r boxplot, fig.width = 8, fig.height = 6}
-posteriorBoxplot(fit)
+```{r sessioninfo}
+sessionInfo()
 ```
-
-And look at the posterior curves, both means and samples:
-
-```{r poscurve-plots, fig.width = 8, fig.height = 6}
-posteriorCurvePlot(data, fit) # plot the mean curve
-posteriorCurvePlot(data, fit, posterior_mean = FALSE) # plot posterior samples
-```
-
 

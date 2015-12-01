@@ -8,7 +8,50 @@ fitPseudotime(X, smoothing_alpha = 10, smoothing_beta = 3,
   pseudotime_mean = 0.5, pseudotime_var = 1, chains = 1, iter = 1000,
   ...)
 }
+\arguments{
+\item{X}{Either a ncells-by-2 reduced dimension matrix or \code{list} of such matrices
+corresponding to multiple representations.}
+
+\item{smoothing_alpha}{The hyperparameter for the Gamma distribution that controls arc-length}
+
+\item{smoothing_beta}{The hyperparameter for the Gamma distribution that controls arc-length}
+
+\item{pseudotime_mean}{The mean of the constrained normal prior on the pseudotimes}
+
+\item{pseudotime_var}{The variance of the constrained normal prior on the pseudotimes}
+
+\item{chains}{The number of chains for the MCMC trace}
+
+\item{iter}{The number of iterations for the MCMC trace}
+
+\item{...}{Additional arguments to be passed to \code{rstan::stan} that can control curve
+fitting (ie the HMC inference algorithm)}
+}
+\value{
+An object of class \code{rstan::stan}, that contains posterior samples for the
+model parameters.
+}
 \description{
-Fit probabilistic pseudotime model
+This method takes one or more reduced-dimension representations of the gene expression
+data and returns a one-dimensional Bayesian Gaussian Process latent variable model as
+a `stanfit` object. The free parameters `smoothing_alpha` and `smoothing_beta` correspond
+to the hyper-hyper distribution on `lambda` which effectively controls the arc-length
+and therefore the smoothness of the pseudotime trajectories.
+}
+\details{
+This function essentially wraps the \code{rstan} function \code{stan}, and in doing so
+returns a \code{stanfit} object. To extract posterior pseudotime samples see example below.
+}
+\examples{
+\dontrun{
+## load libraries for MAP and credible intervals:
+library(coda)
+library(MCMCglmm)
+fit <- fitPseudotime(...)
+pst <- extract(fit, pars = "t")$t # extract pseudotime from stan object
+tmcmc <- mcmc(pst)
+tmap <- posterior.mode(tmcmc) # extract MAP estimate of pseudotimes
+hpd_intervals <- HPDinterval(tmcmc) # extract HPD credible intervals (95\% default)
+}
 }
 

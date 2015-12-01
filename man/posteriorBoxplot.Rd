@@ -13,6 +13,10 @@ posteriorBoxplot(fit, inner = 0.75, outer = 0.95)
 
 \item{outer}{The outer interval for boxplot whiskers (default 0.95)}
 }
+\value{
+A \code{ggplot2} boxplot of posterior pseudotime samples ordered by
+median pseudotime.
+}
 \description{
 Posterior boxplot ordered by pseudotime
 }
