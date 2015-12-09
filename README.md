@@ -4,9 +4,11 @@ pseudogp is an R package for Bayesian inference of Gaussian Process Latent Varia
 
 pseudogp acts on a reduced dimension representation of the data (in a similar manner to [monocle](http://cole-trapnell-lab.github.io/monocle-release/) and [waterfall](http://www.cell.com/cell-stem-cell/fulltext/S1934-5909(15)00312-4)) in which it fits a probabilsitic curve, allowing posterior pseudotime uncertainty to be quantified.
 
+
+
 ## Installation
 
 ```R
 # install.packages("devtools")
-devtools::install_github("kieranrcampbell/pseudogp2")
+devtools::install_github("kieranrcampbell/pseudogp")
 ```
