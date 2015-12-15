@@ -39,7 +39,8 @@ posteriorBoxplot <- function(fit, inner = 0.75, outer = 0.95) {
 #' Posterior curve plot (workhorse of the analysis)
 #'
 #' @export
-posteriorCurvePlot <- function(X, fit, nsamples = 50, nnt = 80, posterior_mean = TRUE, ...) {
+posteriorCurvePlot <- function(X, fit, nsamples = 50, nnt = 80, 
+                               posterior_mean = TRUE, ...) {
   if(is.matrix(X)) X <- list(X)
   Ns <- length(X) ## number of representations
   chains <- length(fit@inits)

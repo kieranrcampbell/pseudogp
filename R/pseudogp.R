@@ -9,6 +9,11 @@
 #'
 #' @param X Either a ncells-by-2 reduced dimension matrix or \code{list} of such matrices
 #' corresponding to multiple representations.
+#' @param intialise_from How to initialise the MCMC chain. One of "random" (stan decides), 
+#' "principal_curve", or "pca" (the first component of PCA rescaled is taken to be the pseudotimes).
+#' Note: if multiple representations are provided, \code{pseudogp} will take the principal curve or
+#' pca from the first rather than combining them. If a particular representation is required, it is
+#' up to the user to re-order them.
 #' @param smoothing_alpha The hyperparameter for the Gamma distribution that controls arc-length
 #' @param smoothing_beta The hyperparameter for the Gamma distribution that controls arc-length
 #' @param pseudotime_mean The mean of the constrained normal prior on the pseudotimes
@@ -20,6 +25,8 @@
 #'
 #' @return An object of class \code{rstan::stan}, that contains posterior samples for the
 #' model parameters.
+#' 
+#' @importFrom princurve principal.curve
 #'
 #' @details This function essentially wraps the \code{rstan} function \code{stan}, and in doing so
 #' returns a \code{stanfit} object. To extract posterior pseudotime samples see example below.
@@ -38,7 +45,7 @@
 #'
 #'
 #' @export
-fitPseudotime <- function(X, smoothing_alpha = 10, smoothing_beta = 3,
+fitPseudotime <- function(X, initialise_from = c("random", "principal_curve", "pca"), smoothing_alpha = 10, smoothing_beta = 3,
                           pseudotime_mean = 0.5, pseudotime_var = 1,
                           chains = 1, iter = 1000, ...) {
   ## find number of representations
@@ -59,9 +66,6 @@ fitPseudotime <- function(X, smoothing_alpha = 10, smoothing_beta = 3,
   message("Standardizing input data")
   X <- lapply(X, standardize)
 
-  ## prepare data
-  #alpha_beta <- meanvar_to_alphabeta(smoothing_mean, smoothing_var)
-  #message(paste("Using hyperparameters", alpha_beta))
 
   # ***always*** order arrays by (representation, latent dimension, cell)
   dx <- array(dim = c(Ns, ndim, ncells))
@@ -71,11 +75,47 @@ fitPseudotime <- function(X, smoothing_alpha = 10, smoothing_beta = 3,
                X = dx,
                gamma_alpha = smoothing_alpha, gamma_beta = smoothing_beta,
                pseudotime_mean = pseudotime_mean, pseudotime_var = pseudotime_var)
+  
+
+  ## prepare data
+  init <- match.arg(initialise_from, c("random", "principal_curve", "pca"))
+  
+  if(init == "principal_curve" || init == "pca") {
+    gamma_mean <- smoothing_alpha / smoothing_beta
+    lambda_mean <- 1 / gamma_mean
+    sigma_mean <- 1
+    
+    xx <- X[[1]]
+    t0 <- NULL
+    
+    ## under the model pseudotimes of 0 and 1 have zero probability, so
+    ## we need to offset them by some degree
+    offset <- 1e-3 
+    
+    if(init == "principal_curve") {
+      pc <- principal.curve(xx)
+      t0 <- pc$lambda
+      t0 <- (t0 - min(t0) + offset) / (max(t0) - min(t0) + 2*offset)
+    } else {
+      xpca <- prcomp(xx)$x[,1]      
+      t0 <- (xpca - min(xpca) + offset) / (max(xpca) - min(xpca) + 2*offset)
+    }
+    
+    # now put everything into correct dimension
+    gamma_init <- array(gamma_mean)
+    lambda_init <- matrix(lambda_mean, nrow = Ns, ncol = ndim)
+    sigma_init <- matrix(sigma_mean, nrow = Ns, ncol = ndim)
+    init_list <- list(t = t0, g = gamma_init, sigma = sigma_init, lambda = lambda_init)
+    
+    # this isn't particularly elegant but who knows
+    init <- vector("list", chains)
+    for(i in 1:chains) init[[i]] <- init_list
+  } 
 
   stanfile <- system.file("pseudogp.stan", package = "pseudogp")
 
   if(!require(rstan)) stop("Stan required for inference")
-  fit <- stan(file = stanfile, data = data,
+  fit <- stan(file = stanfile, data = data, init = init,
                     iter = iter, chains = chains, ...)
 
   return( fit )
@@ -138,6 +178,8 @@ posterior_mean_curve <- function(X, t, l, s, nnt = 80) {
 }
 
 #' Laplacian eigenmaps representation of monocle data
+#'
+#' The 'monocle' data comes from Trapnell et al. (2014) (\url{})
 "monocle_le"
 
 #' PCA representation of monocle data

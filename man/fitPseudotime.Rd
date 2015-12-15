@@ -4,9 +4,9 @@
 \alias{fitPseudotime}
 \title{Fit probabilistic pseudotime model}
 \usage{
-fitPseudotime(X, smoothing_alpha = 10, smoothing_beta = 3,
-  pseudotime_mean = 0.5, pseudotime_var = 1, chains = 1, iter = 1000,
-  ...)
+fitPseudotime(X, initialise_from = c("random", "principal_curve", "pca"),
+  smoothing_alpha = 10, smoothing_beta = 3, pseudotime_mean = 0.5,
+  pseudotime_var = 1, chains = 1, iter = 1000, ...)
 }
 \arguments{
 \item{X}{Either a ncells-by-2 reduced dimension matrix or \code{list} of such matrices
@@ -26,6 +26,12 @@ corresponding to multiple representations.}
 
 \item{...}{Additional arguments to be passed to \code{rstan::stan} that can control curve
 fitting (ie the HMC inference algorithm)}
+
+\item{intialise_from}{How to initialise the MCMC chain. One of "random" (stan decides),
+"principal_curve", or "pca" (the first component of PCA rescaled is taken to be the pseudotimes).
+Note: if multiple representations are provided, \code{pseudogp} will take the principal curve or
+pca from the first rather than combining them. If a particular representation is required, it is
+up to the user to re-order them.}
 }
 \value{
 An object of class \code{rstan::stan}, that contains posterior samples for the

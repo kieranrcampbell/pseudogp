@@ -10,7 +10,7 @@
 monocle_le
 }
 \description{
-Laplacian eigenmaps representation of monocle data
+The 'monocle' data comes from Trapnell et al. (2014) (\url{})
 }
 \keyword{datasets}
 
