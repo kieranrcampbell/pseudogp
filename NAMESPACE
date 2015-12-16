@@ -3,5 +3,6 @@
 export(fitPseudotime)
 export(posteriorBoxplot)
 export(posteriorCurvePlot)
+export(standardize)
 importFrom(MCMCglmm,posterior.mode)
 importFrom(princurve,principal.curve)

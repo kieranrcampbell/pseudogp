@@ -20,6 +20,8 @@
 #' @param pseudotime_var The variance of the constrained normal prior on the pseudotimes
 #' @param chains The number of chains for the MCMC trace
 #' @param iter The number of iterations for the MCMC trace
+#' @param seed The \code{seed} argument that is passed to \code{stan}. Explicitly defined here
+#' as it is used if "principal_curve" is defined as initialisation to ensure consistency.
 #' @param ... Additional arguments to be passed to \code{rstan::stan} that can control curve
 #' fitting (ie the HMC inference algorithm)
 #'
@@ -47,7 +49,7 @@
 #' @export
 fitPseudotime <- function(X, initialise_from = c("random", "principal_curve", "pca"), smoothing_alpha = 10, smoothing_beta = 3,
                           pseudotime_mean = 0.5, pseudotime_var = 1,
-                          chains = 1, iter = 1000, ...) {
+                          chains = 1, iter = 2000, seed = sample.int(.Machine$integer.max, 1), ...) {
   ## find number of representations
   if(is.matrix(X)) X <- list(X)
   if(!is.list(X)) stop("X must either be matrix (for single representation) or list of matrices")
@@ -93,6 +95,7 @@ fitPseudotime <- function(X, initialise_from = c("random", "principal_curve", "p
     offset <- 1e-3 
     
     if(init == "principal_curve") {
+      set.seed(seed)
       pc <- principal.curve(xx)
       t0 <- pc$lambda
       t0 <- (t0 - min(t0) + offset) / (max(t0) - min(t0) + 2*offset)
@@ -121,6 +124,9 @@ fitPseudotime <- function(X, initialise_from = c("random", "principal_curve", "p
   return( fit )
 }
 
+#' Column-wise standardize input data to mean 0 and variance 1
+#' 
+#' @export
 standardize <- function(X) {
   X <- apply(X, 2, function(x) (x - mean(x)) / sd(x))
 }

@@ -4,7 +4,7 @@ This uses multiple sources of data to construct pseudotemporal ordering.
 
 Generalising to any number of data sources of any dimension (but all must be same dimension)
 
-kieran.campbell@sjc.ox.ac.uk
+Author: Kieran Campbell
 */
 
 data {

@@ -6,7 +6,8 @@
 \usage{
 fitPseudotime(X, initialise_from = c("random", "principal_curve", "pca"),
   smoothing_alpha = 10, smoothing_beta = 3, pseudotime_mean = 0.5,
-  pseudotime_var = 1, chains = 1, iter = 1000, ...)
+  pseudotime_var = 1, chains = 1, iter = 1000,
+  seed = sample.int(.Machine$integer.max, 1), ...)
 }
 \arguments{
 \item{X}{Either a ncells-by-2 reduced dimension matrix or \code{list} of such matrices
@@ -23,6 +24,9 @@ corresponding to multiple representations.}
 \item{chains}{The number of chains for the MCMC trace}
 
 \item{iter}{The number of iterations for the MCMC trace}
+
+\item{seed}{The \code{seed} argument that is passed to \code{stan}. Explicitly defined here
+as it is used if "principal_curve" is defined as initialisation to ensure consistency.}
 
 \item{...}{Additional arguments to be passed to \code{rstan::stan} that can control curve
 fitting (ie the HMC inference algorithm)}

@@ -280,9 +280,9 @@ model \{
   .. .. .. .. ..@ modulename  : chr "stan_fit4model371c51eb9e2e_pseudogp_mod"
   .. .. .. .. ..@ system      : chr "x86_64, darwin13.4.0"
   .. .. .. .. ..@ cxxflags    : chr "CXXFLAGS = -Wall -mtune=core2 -O3 $(LTO)  #set_by_rstan"
-  .. .. .. .. ..@ .CXXDSOMISC :<environment: 0x132b6ab78> 
+  .. .. .. .. ..@ .CXXDSOMISC :<environment: 0x173e1d550> 
   ..@ date      : chr "Tue Dec  1 13:45:45 2015"
-  ..@ .MISC     :<environment: 0x143793e30> 
+  ..@ .MISC     :<environment: 0x173e992b0> 
 }}
 \usage{
 le_fit
