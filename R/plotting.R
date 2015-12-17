@@ -36,15 +36,47 @@ posteriorBoxplot <- function(fit, inner = 0.75, outer = 0.95) {
     xlab("Cell") + ylab("Pseudotime")
 }
 
-#' Posterior curve plot (workhorse of the analysis)
-#'
+#' Posterior curve plot. 
+#' 
+#' Flexible methods for plotting posterior mean
+#' curves or samples of posterior mean curves.
+#' 
+#' @param X The representation(s) passed to \code{fitPseudotime} (either a matrix or
+#' list of matrices)
+#' @param fit The \code{stanfit} object returned by \code{fitPseudotime}
+#' @param posterior_mean Logical. If TRUE (default) then the posterior mean curve is
+#' plotting at the MAP estimates of all inferred parameters. If FALSE, then \code{nsamples}
+#' will be randomly drawn from the posterior of the parameters and a curve plotted for each.
+#' @param nsamples The number of new points at which to calculate the posterior mean curves.
+#' @param nnt Number of new pseudo time points at which to plot the posterior mean curves.
+#' @param point_colour The colour of the points (cells) to draw
+#' @param curve_colour The colour of the curves to draw
+#' @param point_alpha The alpha (opacity) of the points
+#' @param curve_alpha The alpha (opacity) of the curves. Note that this is just a suggested value
+#' and the function will choose an appropriate value depending on the number of samples to plot.
+#' This is chosen as \eqn{(1 - \alpha) * exp(1 - nsamples) + \alpha}.
+#' @param grid_nrow If more than one representation is present then they're plotted in a grid.
+#' By default \code{cowplot} will choose the number of rows, but this overrides.
+#' @param grid_nrow If more than one representation is present then they're plotted in a grid.
+#' By default \code{cowplot} will choose the number of columns, but this overrides.
+#' @param standardize_ranges Logical. If plotting multiple representations it can be useful to have 
+#' x and y lims that don't depend on the fit (so plots align correctly). If this is set to FALSE,
+#' \code{ggplot2} calculates the x and y limits. If this is set to TRUE, the x and y limits are set
+#' to the minimum and maximum of the X values plus or minus 6\% of the range between them.
+#' 
 #' @export
-posteriorCurvePlot <- function(X, fit, nsamples = 50, nnt = 80, 
-                               posterior_mean = TRUE, ...) {
+posteriorCurvePlot <- function(X, fit, posterior_mean = TRUE, 
+                               nsamples = 50, nnt = 80, 
+                               point_colour = "darkred", 
+                               curve_colour = "black", point_alpha = 1,
+                               curve_alpha = 0.5,
+                               grid_nrow = NULL, grid_ncol = NULL, 
+                               use_cowplot = TRUE, 
+                               standardize_ranges = FALSE, ...) {
   if(is.matrix(X)) X <- list(X)
   Ns <- length(X) ## number of representations
   chains <- length(fit@inits)
-  message(paste("Plotting traces for", Ns,"representations and", chains, "chains"))
+  message(paste("Plotting traces for", Ns,"representation(s) and", chains, "chain(s)"))
 
   plots <- vector("list", Ns)
   # this is of dim trace-chain-cell
@@ -54,15 +86,19 @@ posteriorCurvePlot <- function(X, fit, nsamples = 50, nnt = 80,
   for(i in 1:Ns) {
     l <- lambda[,,(2*i - 1):(2*i),drop=FALSE]
     s <- sigma[,,(2*i - 1):(2*i),drop=FALSE]
-    plt <- makeEnvelopePlot(pst, l, s, X[[i]], chains, posterior_mean, nsamples, nnt)
+    plt <- makeEnvelopePlot(pst, l, s, X[[i]], chains, posterior_mean, nsamples, nnt, point_colour,
+                            curve_colour, point_alpha, curve_alpha, use_cowplot, standardize_ranges)
     plots[[i]] <- plt
   }
-  gplt <- cowplot::plot_grid(plotlist = plots, labels = names(X))
+  gplt <- cowplot::plot_grid(plotlist = plots, labels = names(X), nrow = grid_nrow, ncol = grid_ncol)
   return( gplt )
 }
 
 #' @importFrom MCMCglmm posterior.mode
-makeEnvelopePlot <- function(pst, l, s, x, chains, posterior_mean, ncurves, nnt) {
+makeEnvelopePlot <- function(pst, l, s, x, chains, posterior_mean, ncurves, nnt,
+                             point_colour = "darkred", curve_colour = "black",
+                             point_alpha = 1, curve_alpha = 0.5,
+                             use_cowplot = TRUE, standardize_ranges = FALSE) {
   n_posterior_samples <- dim(pst)[1]
   curve_samples <- sample(n_posterior_samples, ncurves)
   pmcs <- lapply(1:chains, function(chain) {
@@ -85,13 +121,28 @@ makeEnvelopePlot <- function(pst, l, s, x, chains, posterior_mean, ncurves, nnt)
   names(x) <- c("x1", "x2")
   plt <- ggplot()
   plt <- plt + geom_point(data = data.frame(x), aes(x = x1, y = x2), shape = 21,
-                          fill = 'black', colour = 'white', size = 3, alpha = 0.5) +
-    xlab("") + ylab("") + theme_bw()
+                          fill = point_colour, colour = 'white', size = 3, alpha = point_alpha) +
+    xlab("Component 1") + ylab("Component 2") 
+  if(standardize_ranges) { # hard set x and y lims
+    mins <- apply(x, 2, min)
+    maxs <- apply(x, 2, max)
+    ranges <- maxs - mins
+    pct_range_6 <- 0.06 * ranges
+    lower_lims <- mins - pct_range_6
+    upper_lims <- maxs + pct_range_6
+    plt <- plt + xlim(c(lower_lims[1], upper_lims[1])) + ylim(c(lower_lims[2], upper_lims[2]))
+  }
+  
+  if(use_cowplot) {
+    plt <- plt + cowplot::theme_cowplot()
+  } else {
+    plt <- plt + theme_bw()
+  }
 
-  ncolor <- min(chains, 9)
-  if(ncolor < 3) ncolor <- 3
-  getPalette <- colorRampPalette(brewer.pal(ncolor, "Set1"))
-  colorset <-getPalette(chains)
+#   ncolor <- min(chains, 9)
+#   if(ncolor < 3) ncolor <- 3
+#   getPalette <- colorRampPalette(brewer.pal(ncolor, "Set1"))
+#   colorset <-getPalette(chains)
 
   for(chain in 1:chains) {
     pmc <- pmcs[[chain]]
@@ -103,12 +154,12 @@ makeEnvelopePlot <- function(pst, l, s, x, chains, posterior_mean, ncurves, nnt)
     M$nt <- unlist(lapply(pmc, function(x) x$t))
     M <- dplyr::arrange(M, curve, nt)
 
-    alpha <- 0.2
-    if(posterior_mean) alpha <- 1
+    calculated_alpha <- (1 - curve_alpha) * exp(1) * exp(-ncurves) + curve_alpha
+    if(posterior_mean) calculated_alpha <- 1
 
     for(i in 1:ncurves) {
       plt <- plt + geom_path(data = dplyr::filter(M, curve == i), aes(x = M1, y = M2),
-                             size = 2, alpha = alpha, color = colorset[chain])
+                             size = 2, alpha = calculated_alpha, color = curve_colour)
     }
   }
   return( plt )

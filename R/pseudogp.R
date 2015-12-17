@@ -49,7 +49,7 @@
 #' @export
 fitPseudotime <- function(X, initialise_from = c("random", "principal_curve", "pca"), smoothing_alpha = 10, smoothing_beta = 3,
                           pseudotime_mean = 0.5, pseudotime_var = 1,
-                          chains = 1, iter = 2000, seed = sample.int(.Machine$integer.max, 1), ...) {
+                          chains = 1, iter = 1000, seed = sample.int(.Machine$integer.max, 1), ...) {
   ## find number of representations
   if(is.matrix(X)) X <- list(X)
   if(!is.list(X)) stop("X must either be matrix (for single representation) or list of matrices")
@@ -105,7 +105,7 @@ fitPseudotime <- function(X, initialise_from = c("random", "principal_curve", "p
     }
     
     # now put everything into correct dimension
-    gamma_init <- array(gamma_mean)
+    gamma_init <- array(gamma_mean, dim = Ns)
     lambda_init <- matrix(lambda_mean, nrow = Ns, ncol = ndim)
     sigma_init <- matrix(sigma_mean, nrow = Ns, ncol = ndim)
     init_list <- list(t = t0, g = gamma_init, sigma = sigma_init, lambda = lambda_init)
@@ -191,8 +191,8 @@ posterior_mean_curve <- function(X, t, l, s, nnt = 80) {
 #' PCA representation of monocle data
 "monocle_pca"
 
-#' tSNE representation of monocle data
+#' t-SNE representation of monocle data
 "monocle_tsne"
 
-#' Stan fit for laplacian eigenmaps representation of monocle
-"le_fit"
+# #' Stan fit for laplacian eigenmaps representation of monocle
+# "le_fit"

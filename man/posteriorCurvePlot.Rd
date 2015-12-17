@@ -2,12 +2,50 @@
 % Please edit documentation in R/plotting.R
 \name{posteriorCurvePlot}
 \alias{posteriorCurvePlot}
-\title{Posterior curve plot (workhorse of the analysis)}
+\title{Posterior curve plot.}
 \usage{
-posteriorCurvePlot(X, fit, nsamples = 50, nnt = 80, posterior_mean = TRUE,
-  ...)
+posteriorCurvePlot(X, fit, posterior_mean = TRUE, nsamples = 50, nnt = 80,
+  point_colour = "darkred", curve_colour = "black", point_alpha = 1,
+  curve_alpha = 0.5, grid_nrow = NULL, grid_ncol = NULL,
+  use_cowplot = TRUE, standardize_ranges = FALSE, ...)
+}
+\arguments{
+\item{X}{The representation(s) passed to \code{fitPseudotime} (either a matrix or
+list of matrices)}
+
+\item{fit}{The \code{stanfit} object returned by \code{fitPseudotime}}
+
+\item{posterior_mean}{Logical. If TRUE (default) then the posterior mean curve is
+plotting at the MAP estimates of all inferred parameters. If FALSE, then \code{nsamples}
+will be randomly drawn from the posterior of the parameters and a curve plotted for each.}
+
+\item{nsamples}{The number of new points at which to calculate the posterior mean curves.}
+
+\item{nnt}{Number of new pseudo time points at which to plot the posterior mean curves.}
+
+\item{point_colour}{The colour of the points (cells) to draw}
+
+\item{curve_colour}{The colour of the curves to draw}
+
+\item{point_alpha}{The alpha (opacity) of the points}
+
+\item{curve_alpha}{The alpha (opacity) of the curves. Note that this is just a suggested value
+and the function will choose an appropriate value depending on the number of samples to plot.
+This is chosen as \eqn{(1 - \alpha) * exp(1 - nsamples) + \alpha}.}
+
+\item{grid_nrow}{If more than one representation is present then they're plotted in a grid.
+By default \code{cowplot} will choose the number of rows, but this overrides.}
+
+\item{standardize_ranges}{Logical. If plotting multiple representations it can be useful to have
+x and y lims that don't depend on the fit (so plots align correctly). If this is set to FALSE,
+\code{ggplot2} calculates the x and y limits. If this is set to TRUE, the x and y limits are set
+to the minimum and maximum of the X values plus or minus 6\% of the range between them.}
+
+\item{grid_nrow}{If more than one representation is present then they're plotted in a grid.
+By default \code{cowplot} will choose the number of columns, but this overrides.}
 }
 \description{
-Posterior curve plot (workhorse of the analysis)
+Flexible methods for plotting posterior mean
+curves or samples of posterior mean curves.
 }
 

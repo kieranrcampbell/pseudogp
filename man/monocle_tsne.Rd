@@ -3,7 +3,7 @@
 \docType{data}
 \name{monocle_tsne}
 \alias{monocle_tsne}
-\title{tSNE representation of monocle data}
+\title{t-SNE representation of monocle data}
 \format{\preformatted{ num [1:155, 1:2] -1.07 -0.93 -0.64 -1.58 0.75 ...
  - attr(*, "dimnames")=List of 2
   ..$ : chr [1:155] "T0_CT_A01" "T0_CT_A03" "T0_CT_A05" "T0_CT_A06" ...
@@ -13,7 +13,7 @@
 monocle_tsne
 }
 \description{
-tSNE representation of monocle data
+t-SNE representation of monocle data
 }
 \keyword{datasets}
 
