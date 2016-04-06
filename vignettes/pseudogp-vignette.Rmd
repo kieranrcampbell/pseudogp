@@ -13,12 +13,22 @@ vignette: >
 
 ## Introduction
 
+`pseudogp` fits probabilistic pseudotime trajectories to two-dimensional reduced-dimension representations of genomic data using Bayesian Gaussian Process Latent Variable Models. Under the hood it uses [Stan](http://mc-stan.org) for posterior inference, and provides a few useful functions for plotting the resulting traces (notably `posteriorCurvePlot` and `posteriorBoxPlot`).
+
+```{r setup, include = FALSE}
+library(ggplot2)
+theme_set(theme_bw())
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE, 
+                      message = FALSE, warning = FALSE,
+                      fig.center = TRUE, fig.width = 6, fig.height = 4)
+```
+
 ## A simple example
 
 Let's first trying to fit a probabilistic trajectory to a PCA representation of the _Trapnell et al. (2014)_ dataset. This is included in the package under `monocle_pca`:
 
 ```{r simple-pca, warning = FALSE, message = FALSE, fig.width = 5, fig.height=3}
-devtools::load_all("../pseudogp")
+library(pseudogp)
 library(ggplot2)
 data(monocle_le)
 
@@ -134,6 +144,6 @@ fit <- fitPseudotime(data, chains = 2, iter = 1000, smoothing_alpha = 12, smooth
 ## Technical details
 
 ```{r sessioninfo}
-sessionInfo()
+devtools::session_info()
 ```
 
