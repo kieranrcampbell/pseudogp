@@ -164,3 +164,29 @@ makeEnvelopePlot <- function(pst, l, s, x, chains, posterior_mean, ncurves, nnt,
   }
   return( plt )
 }
+
+#' Plot MCMC diagnostics.
+#' 
+#' Plot basic MCMC diagnostics (traceplot and autocorrelation) of the log-posterior probability
+#' for a \code{stanfit} object.
+#' 
+#' Further assessment of convergence can be done using \code{rstan} functions.
+#' 
+#' @param fit A \code{stanfit} object
+#' @param arrange How to arrange the plots. If "vertical", traceplot and autocorrelation are 
+#' arranged in one column, while if "horizontal" traceplot and autocorrelation are arranged
+#' in one row.
+#' @export
+#' @importFrom cowplot plot_grid
+#' 
+#' @return A \code{ggplot2} object
+#'
+plotDiagnostic <- function(fit, arrange = c("vertical", "horizontal")) {
+  stopifnot(is(fit, "stanfit"))
+  arrange <- match.arg(arrange)
+  nrow <- switch(arrange,
+                 vertical = 2,
+                 horizontal = 1)
+  plt <- cowplot::plot_grid(stan_trace(fit, "lp__"), stan_ac(fit, "lp__"), nrow = nrow)
+  return(plt)
+}
