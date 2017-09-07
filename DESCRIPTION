@@ -13,12 +13,12 @@ Suggests:
     knitr
 VignetteBuilder: knitr
 Imports:
-    cowplot
-Depends:
+    cowplot,
     rstan,
     coda,
     matrixStats,
     RColorBrewer,
     MCMCglmm,
     princurve
+Depends:
 RoxygenNote: 5.0.1
