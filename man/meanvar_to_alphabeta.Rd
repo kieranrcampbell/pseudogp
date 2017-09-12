@@ -11,4 +11,3 @@ meanvar_to_alphabeta(mean, var)
 Convert the mean and variance of a gamma distribution
 to the alpha-beta parametrization
 }
-

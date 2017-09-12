@@ -11,4 +11,3 @@ cov_matrix(t1, t2, lambda, sigma = NULL)
 Calculate a double exponential covariance matrix
 with a diagonal noise component
 }
-

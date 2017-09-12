@@ -9,4 +9,3 @@ standardize(X)
 \description{
 Column-wise standardize input data to mean 0 and variance 1
 }
-

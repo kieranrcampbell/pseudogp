@@ -36,7 +36,7 @@ This is chosen as \eqn{(1 - \alpha) * exp(1 - nsamples) + \alpha}.}
 \item{grid_nrow}{If more than one representation is present then they're plotted in a grid.
 By default \code{cowplot} will choose the number of rows, but this overrides.}
 
-\item{standardize_ranges}{Logical. If plotting multiple representations it can be useful to have 
+\item{standardize_ranges}{Logical. If plotting multiple representations it can be useful to have
 x and y lims that don't depend on the fit (so plots align correctly). If this is set to FALSE,
 \code{ggplot2} calculates the x and y limits. If this is set to TRUE, the x and y limits are set
 to the minimum and maximum of the X values plus or minus 6\% of the range between them.}
@@ -48,4 +48,3 @@ By default \code{cowplot} will choose the number of columns, but this overrides.
 Flexible methods for plotting posterior mean
 curves or samples of posterior mean curves.
 }
-

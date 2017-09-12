@@ -12,4 +12,3 @@ monocle_tsne
 t-SNE representation of monocle data
 }
 \keyword{datasets}
-

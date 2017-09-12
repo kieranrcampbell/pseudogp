@@ -66,4 +66,3 @@ hpd_intervals <- HPDinterval(tmcmc) # extract HPD credible intervals (95\% defau
 
 
 }
-
