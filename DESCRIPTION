@@ -11,7 +11,9 @@ License: MIT
 LazyData: TRUE
 Suggests:
     knitr,
-    rmarkdown
+    rmarkdown,
+    dplyr,
+    ggplot2
 VignetteBuilder: knitr
 Imports:
     cowplot,
