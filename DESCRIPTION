@@ -10,7 +10,8 @@ Description: This package fits Bayesian Gaussian Process Latent Variable Models
 License: MIT
 LazyData: TRUE
 Suggests:
-    knitr
+    knitr,
+    rmarkdown
 VignetteBuilder: knitr
 Imports:
     cowplot,
@@ -21,4 +22,5 @@ Imports:
     MCMCglmm,
     princurve
 Depends:
+  R
 RoxygenNote: 5.0.1
