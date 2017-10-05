@@ -75,7 +75,7 @@ rstan::traceplot(le_fit, pars="sigma")
 We can also extract the pseudotime traces from the object using `rstan:extract`:
 
 ```{r extract-pst}
-pst <- extract(le_fit, pars="t")$t
+pst <- rstan::extract(le_fit, pars="t")$t
 print(str(pst))
 ```
 
