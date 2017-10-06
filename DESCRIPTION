@@ -11,18 +11,20 @@ License: MIT + file LICENSE
 LazyData: TRUE
 Suggests:
     knitr,
-    rmarkdown,
-    dplyr,
-    ggplot2
+    rmarkdown
 VignetteBuilder: knitr
 Depends:
     R (>= 3.0)
 Imports:
-    cowplot,
-    rstan,
     coda,
+    cowplot,
+    dplyr,
+    ggplot2,
     matrixStats,
-    RColorBrewer,
     MCMCglmm,
-    princurve
+    methods,
+    princurve,
+    stats,
+    RColorBrewer,
+    rstan
 RoxygenNote: 6.0.1

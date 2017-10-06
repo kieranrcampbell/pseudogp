@@ -8,6 +8,11 @@
 #' @return A \code{ggplot2} boxplot of posterior pseudotime samples ordered by
 #' median pseudotime.
 #'
+#' @import ggplot2
+#' @importFrom rstan extract
+#' @importFrom coda mcmc HPDinterval
+#' @importFrom matrixStats colMedians
+#'
 #' @export
 posteriorBoxplot <- function(fit, inner = 0.75, outer = 0.95) {
   # we can essentially infer the number of chains & representations given the dimension
@@ -65,6 +70,10 @@ posteriorBoxplot <- function(fit, inner = 0.75, outer = 0.95) {
 #' \code{ggplot2} calculates the x and y limits. If this is set to TRUE, the x and y limits are set
 #' to the minimum and maximum of the X values plus or minus 6\% of the range between them.
 #'
+#' @import ggplot2
+#' @importFrom rstan extract
+#' @importFrom cowplot theme_cowplot plot_grid
+#'
 #' @export
 posteriorCurvePlot <- function(X, fit, posterior_mean = TRUE,
                                nsamples = 50, nnt = 80,
@@ -73,7 +82,7 @@ posteriorCurvePlot <- function(X, fit, posterior_mean = TRUE,
                                curve_alpha = 0.5,
                                grid_nrow = NULL, grid_ncol = NULL,
                                use_cowplot = TRUE,
-                               standardize_ranges = FALSE, ...) {
+                               standardize_ranges = FALSE) {
   if(is.matrix(X)) X <- list(X)
   Ns <- length(X) ## number of representations
   chains <- length(fit@inits)
@@ -95,7 +104,11 @@ posteriorCurvePlot <- function(X, fit, posterior_mean = TRUE,
   return( gplt )
 }
 
+#' @import ggplot2
+#' @importFrom cowplot theme_cowplot
 #' @importFrom MCMCglmm posterior.mode
+#' @importFrom coda mcmc
+#' @importFrom dplyr arrange filter
 makeEnvelopePlot <- function(pst, l, s, x, chains, posterior_mean, ncurves, nnt,
                              point_colour = "darkred", curve_colour = "black",
                              point_alpha = 1, curve_alpha = 0.5,
@@ -178,16 +191,18 @@ makeEnvelopePlot <- function(pst, l, s, x, chains, posterior_mean, ncurves, nnt,
 #' arranged in one column, while if "horizontal" traceplot and autocorrelation are arranged
 #' in one row.
 #' @export
+#'
 #' @importFrom cowplot plot_grid
+#' @importFrom rstan stan_trace stan_ac
+#' @importFrom methods is
 #'
 #' @return A \code{ggplot2} object
-#'
 plotDiagnostic <- function(fit, arrange = c("vertical", "horizontal")) {
-  stopifnot(is(fit, "stanfit"))
+  stopifnot(methods::is(fit, "stanfit"))
   arrange <- match.arg(arrange)
   nrow <- switch(arrange,
                  vertical = 2,
                  horizontal = 1)
-  plt <- cowplot::plot_grid(stan_trace(fit, "lp__"), stan_ac(fit, "lp__"), nrow = nrow)
+  plt <- cowplot::plot_grid(rstan::stan_trace(fit, "lp__"), rstan::stan_ac(fit, "lp__"), nrow = nrow)
   return(plt)
 }

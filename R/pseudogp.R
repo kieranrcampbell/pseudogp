@@ -29,6 +29,8 @@
 #' model parameters.
 #'
 #' @importFrom princurve principal.curve
+#' @importFrom rstan stan
+#' @importFrom stats prcomp
 #'
 #' @details This function essentially wraps the \code{rstan} function \code{stan}, and in doing so
 #' returns a \code{stanfit} object. To extract posterior pseudotime samples see example below.
@@ -79,48 +81,47 @@ fitPseudotime <- function(X,
                X = dx,
                gamma_alpha = smoothing_alpha, gamma_beta = smoothing_beta,
                pseudotime_mean = pseudotime_mean, pseudotime_var = pseudotime_var)
-  
+
 
   ## prepare data
   init <- match.arg(initialise_from, c("random", "principal_curve", "pca"))
-  
+
   if(init == "principal_curve" || init == "pca") {
     gamma_mean <- smoothing_alpha / smoothing_beta
     lambda_mean <- 1 / gamma_mean
     sigma_mean <- 1
-    
+
     xx <- X[[1]]
     t0 <- NULL
-    
+
     ## under the model pseudotimes of 0 and 1 have zero probability, so
     ## we need to offset them by some degree
-    offset <- 1e-3 
-    
+    offset <- 1e-3
+
     if(init == "principal_curve") {
       set.seed(seed)
-      pc <- principal.curve(xx)
+      pc <- princurve::principal.curve(xx)
       t0 <- pc$lambda
       t0 <- (t0 - min(t0) + offset) / (max(t0) - min(t0) + 2*offset)
     } else {
-      xpca <- prcomp(xx)$x[,1]      
+      xpca <- stats::prcomp(xx)$x[,1]
       t0 <- (xpca - min(xpca) + offset) / (max(xpca) - min(xpca) + 2*offset)
     }
-    
+
     # now put everything into correct dimension
     gamma_init <- array(gamma_mean, dim = Ns)
     lambda_init <- matrix(lambda_mean, nrow = Ns, ncol = ndim)
     sigma_init <- matrix(sigma_mean, nrow = Ns, ncol = ndim)
     init_list <- list(t = t0, g = gamma_init, sigma = sigma_init, lambda = lambda_init)
-    
+
     # this isn't particularly elegant but who knows
     init <- vector("list", chains)
     for(i in 1:chains) init[[i]] <- init_list
-  } 
+  }
 
   stanfile <- system.file("pseudogp.stan", package = "pseudogp")
 
-  if(!require(rstan)) stop("Stan required for inference")
-  fit <- stan(file = stanfile, data = data, init = init,
+  fit <- rstan::stan(file = stanfile, data = data, init = init,
                     iter = iter, chains = chains, ...)
 
   return( fit )
@@ -134,7 +135,7 @@ fitPseudotime <- function(X,
 #'
 #' @export
 standardize <- function(X) {
-  X <- apply(X, 2, function(x) (x - mean(x)) / sd(x))
+  X <- apply(X, 2, function(x) (x - mean(x)) / stats::sd(x))
 }
 
 # Convert the mean and variance of a gamma distribution
@@ -175,8 +176,10 @@ cov_matrix <- function(t1, t2, lambda, sigma = NULL) {
 #' @param l Lambda
 #' @param s Signa
 #' @param nnt Number of new time points
+#'
+#' @importFrom stats runif
 posterior_mean_curve <- function(X, t, l, s, nnt = 80) {
-  nt <- runif(nnt)
+  nt <- stats::runif(nnt)
   K_y <- lapply(1:2, function(i) cov_matrix(t, t, as.numeric(l[i]), as.numeric(s[i])))
   K_star <- lapply(1:2, function(i) cov_matrix(t, nt, as.numeric(l[i])))
   K_dstar <- lapply(1:2, function(i) cov_matrix(nt, nt, as.numeric(l[i])))
@@ -202,3 +205,4 @@ posterior_mean_curve <- function(X, t, l, s, nnt = 80) {
 
 #' Stan fit for laplacian eigenmaps representation of monocle
 "le_fit"
+
