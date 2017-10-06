@@ -7,7 +7,7 @@ Author: Kieran Campbell <kieran.campbell@sjc.ox.ac.uk>
 Maintainer: Kieran Campbell <kieran.campbell@sjc.ox.ac.uk>
 Description: This package fits Bayesian Gaussian Process Latent Variable Models
     to low-dimensional representations of single-cell RNA-seq data.
-License: MIT
+License: MIT + file LICENSE
 LazyData: TRUE
 Suggests:
     knitr,
