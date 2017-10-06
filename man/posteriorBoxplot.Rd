@@ -20,4 +20,3 @@ median pseudotime.
 \description{
 Posterior boxplot ordered by pseudotime
 }
-

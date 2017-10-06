@@ -13,6 +13,12 @@ fitPseudotime(X, initialise_from = c("random", "principal_curve", "pca"),
 \item{X}{Either a ncells-by-2 reduced dimension matrix or \code{list} of such matrices
 corresponding to multiple representations.}
 
+\item{initialise_from}{How to initialise the MCMC chain. One of "random" (stan decides),
+"principal_curve", or "pca" (the first component of PCA rescaled is taken to be the pseudotimes).
+Note: if multiple representations are provided, \code{pseudogp} will take the principal curve or
+pca from the first rather than combining them. If a particular representation is required, it is
+up to the user to re-order them.}
+
 \item{smoothing_alpha}{The hyperparameter for the Gamma distribution that controls arc-length}
 
 \item{smoothing_beta}{The hyperparameter for the Gamma distribution that controls arc-length}
@@ -30,12 +36,6 @@ as it is used if "principal_curve" is defined as initialisation to ensure consis
 
 \item{...}{Additional arguments to be passed to \code{rstan::stan} that can control curve
 fitting (ie the HMC inference algorithm)}
-
-\item{intialise_from}{How to initialise the MCMC chain. One of "random" (stan decides), 
-"principal_curve", or "pca" (the first component of PCA rescaled is taken to be the pseudotimes).
-Note: if multiple representations are provided, \code{pseudogp} will take the principal curve or
-pca from the first rather than combining them. If a particular representation is required, it is
-up to the user to re-order them.}
 }
 \value{
 An object of class \code{rstan::stan}, that contains posterior samples for the
@@ -66,4 +66,3 @@ hpd_intervals <- HPDinterval(tmcmc) # extract HPD credible intervals (95\% defau
 
 
 }
-

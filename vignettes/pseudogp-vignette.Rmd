@@ -68,14 +68,14 @@ posteriorBoxplot(le_fit)
 All the posterior samples of pseudotime and kernel parameters are contained in the object returned by `rstan::stan`. We can use `rstan`'s built in plotting functions to examine the traces of the kernel parameters too. For example, we can look at a boxplot of the lambda parameters or plot the trace of the sigma (noise) parameters:
 
 ```{r rstan-plotting, fig.width=6, fig.height=4}
-plot(le_fit, pars="lambda")
+rstan::plot(le_fit, pars="lambda")
 rstan::traceplot(le_fit, pars="sigma")
 ```
 
 We can also extract the pseudotime traces from the object using `rstan:extract`:
 
 ```{r extract-pst}
-pst <- extract(le_fit, pars="t")$t
+pst <- rstan::extract(le_fit, pars="t")$t
 print(str(pst))
 ```
 

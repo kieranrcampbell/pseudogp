@@ -23,4 +23,3 @@ doesn't relate to pseudotimes - this can take a pseudotime sample from the
 posterior pseudotime distribution and will calculate the mean curve
 in the data space.
 }
-

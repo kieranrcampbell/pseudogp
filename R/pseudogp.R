@@ -9,7 +9,7 @@
 #'
 #' @param X Either a ncells-by-2 reduced dimension matrix or \code{list} of such matrices
 #' corresponding to multiple representations.
-#' @param intialise_from How to initialise the MCMC chain. One of "random" (stan decides), 
+#' @param initialise_from How to initialise the MCMC chain. One of "random" (stan decides),
 #' "principal_curve", or "pca" (the first component of PCA rescaled is taken to be the pseudotimes).
 #' Note: if multiple representations are provided, \code{pseudogp} will take the principal curve or
 #' pca from the first rather than combining them. If a particular representation is required, it is
@@ -27,8 +27,10 @@
 #'
 #' @return An object of class \code{rstan::stan}, that contains posterior samples for the
 #' model parameters.
-#' 
+#'
 #' @importFrom princurve principal.curve
+#' @importFrom rstan stan
+#' @importFrom stats prcomp
 #'
 #' @details This function essentially wraps the \code{rstan} function \code{stan}, and in doing so
 #' returns a \code{stanfit} object. To extract posterior pseudotime samples see example below.
@@ -47,7 +49,9 @@
 #'
 #'
 #' @export
-fitPseudotime <- function(X, initialise_from = c("random", "principal_curve", "pca"), smoothing_alpha = 10, smoothing_beta = 3,
+fitPseudotime <- function(X,
+                          initialise_from = c("random", "principal_curve", "pca"),
+                          smoothing_alpha = 10, smoothing_beta = 3,
                           pseudotime_mean = 0.5, pseudotime_var = 1,
                           chains = 1, iter = 1000, seed = sample.int(.Machine$integer.max, 1), ...) {
   ## find number of representations
@@ -77,70 +81,73 @@ fitPseudotime <- function(X, initialise_from = c("random", "principal_curve", "p
                X = dx,
                gamma_alpha = smoothing_alpha, gamma_beta = smoothing_beta,
                pseudotime_mean = pseudotime_mean, pseudotime_var = pseudotime_var)
-  
+
 
   ## prepare data
   init <- match.arg(initialise_from, c("random", "principal_curve", "pca"))
-  
+
   if(init == "principal_curve" || init == "pca") {
     gamma_mean <- smoothing_alpha / smoothing_beta
     lambda_mean <- 1 / gamma_mean
     sigma_mean <- 1
-    
+
     xx <- X[[1]]
     t0 <- NULL
-    
+
     ## under the model pseudotimes of 0 and 1 have zero probability, so
     ## we need to offset them by some degree
-    offset <- 1e-3 
-    
+    offset <- 1e-3
+
     if(init == "principal_curve") {
       set.seed(seed)
-      pc <- principal.curve(xx)
+      pc <- princurve::principal.curve(xx)
       t0 <- pc$lambda
       t0 <- (t0 - min(t0) + offset) / (max(t0) - min(t0) + 2*offset)
     } else {
-      xpca <- prcomp(xx)$x[,1]      
+      xpca <- stats::prcomp(xx)$x[,1]
       t0 <- (xpca - min(xpca) + offset) / (max(xpca) - min(xpca) + 2*offset)
     }
-    
+
     # now put everything into correct dimension
     gamma_init <- array(gamma_mean, dim = Ns)
     lambda_init <- matrix(lambda_mean, nrow = Ns, ncol = ndim)
     sigma_init <- matrix(sigma_mean, nrow = Ns, ncol = ndim)
     init_list <- list(t = t0, g = gamma_init, sigma = sigma_init, lambda = lambda_init)
-    
+
     # this isn't particularly elegant but who knows
     init <- vector("list", chains)
     for(i in 1:chains) init[[i]] <- init_list
-  } 
+  }
 
   stanfile <- system.file("pseudogp.stan", package = "pseudogp")
 
-  if(!require(rstan)) stop("Stan required for inference")
-  fit <- stan(file = stanfile, data = data, init = init,
+  fit <- rstan::stan(file = stanfile, data = data, init = init,
                     iter = iter, chains = chains, ...)
 
   return( fit )
 }
 
 #' Column-wise standardize input data to mean 0 and variance 1
-#' 
+#'
+#' @param X data to standardize
+#'
+#' @importFrom stats sd
+#'
 #' @export
 standardize <- function(X) {
-  X <- apply(X, 2, function(x) (x - mean(x)) / sd(x))
+  X <- apply(X, 2, function(x) (x - mean(x)) / stats::sd(x))
 }
 
-#' Convert the mean and variance of a gamma distribution
-#' to the alpha-beta parametrization
+# Convert the mean and variance of a gamma distribution
+# to the alpha-beta parametrization
 meanvar_to_alphabeta <- function(mean, var) {
   alpha <- mean^2 / var
   beta <- mean / var
   return(c(alpha, beta))
 }
 
-#' Calculate a double exponential covariance matrix
-#' with a diagonal noise component
+# Calculate a double exponential covariance matrix
+# with a diagonal noise component
 cov_matrix <- function(t1, t2, lambda, sigma = NULL) {
   n1 <- length(t1)
   n2 <- length(t2)
@@ -169,8 +176,10 @@ cov_matrix <- function(t1, t2, lambda, sigma = NULL) {
 #' @param l Lambda
 #' @param s Signa
 #' @param nnt Number of new time points
+#'
+#' @importFrom stats runif
 posterior_mean_curve <- function(X, t, l, s, nnt = 80) {
-  nt <- runif(nnt)
+  nt <- stats::runif(nnt)
   K_y <- lapply(1:2, function(i) cov_matrix(t, t, as.numeric(l[i]), as.numeric(s[i])))
   K_star <- lapply(1:2, function(i) cov_matrix(t, nt, as.numeric(l[i])))
   K_dstar <- lapply(1:2, function(i) cov_matrix(nt, nt, as.numeric(l[i])))
@@ -194,5 +203,6 @@ posterior_mean_curve <- function(X, t, l, s, nnt = 80) {
 #' t-SNE representation of monocle data
 "monocle_tsne"
 
-# #' Stan fit for laplacian eigenmaps representation of monocle
-# "le_fit"
+#' Stan fit for laplacian eigenmaps representation of monocle
+"le_fit"
+

@@ -8,6 +8,11 @@
 #' @return A \code{ggplot2} boxplot of posterior pseudotime samples ordered by
 #' median pseudotime.
 #'
+#' @import ggplot2
+#' @importFrom rstan extract
+#' @importFrom coda mcmc HPDinterval
+#' @importFrom matrixStats colMedians
+#'
 #' @export
 posteriorBoxplot <- function(fit, inner = 0.75, outer = 0.95) {
   # we can essentially infer the number of chains & representations given the dimension
@@ -17,14 +22,14 @@ posteriorBoxplot <- function(fit, inner = 0.75, outer = 0.95) {
   P <- dim(fit@inits[[1]]$lambda)[2]
   if(chains > 1) warning("Boxplots currently only supported for 1 chain - will permute samples")
 
-  pst <- extract(fit, pars = "t", permute = TRUE)$t
-  tmcmc <- mcmc(pst)
-  hpdinner <- HPDinterval(tmcmc, inner)
-  hpdouter <- HPDinterval(tmcmc, outer)
+  pst <- rstan::extract(fit, pars = "t", permute = TRUE)$t
+  tmcmc <- coda::mcmc(pst)
+  hpdinner <- coda::HPDinterval(tmcmc, inner)
+  hpdouter <- coda::HPDinterval(tmcmc, outer)
   p <- data.frame(cbind(hpdinner, hpdouter))
   edge_names <- c(paste0(c("lower","upper"), inner), paste0(c("lower","upper"), outer))
   names(p) <- edge_names
-  p$Median <- colMedians(pst)
+  p$Median <- matrixStats::colMedians(pst)
   p$Cell <- as.factor(rank(p$Median))
 
   ggplot(p) + geom_boxplot(aes_string(x = "Cell", middle = "Median",
@@ -36,11 +41,11 @@ posteriorBoxplot <- function(fit, inner = 0.75, outer = 0.95) {
     xlab("Cell") + ylab("Pseudotime")
 }
 
-#' Posterior curve plot. 
-#' 
+#' Posterior curve plot.
+#'
 #' Flexible methods for plotting posterior mean
 #' curves or samples of posterior mean curves.
-#' 
+#'
 #' @param X The representation(s) passed to \code{fitPseudotime} (either a matrix or
 #' list of matrices)
 #' @param fit The \code{stanfit} object returned by \code{fitPseudotime}
@@ -57,22 +62,27 @@ posteriorBoxplot <- function(fit, inner = 0.75, outer = 0.95) {
 #' This is chosen as \eqn{(1 - \alpha) * exp(1 - nsamples) + \alpha}.
 #' @param grid_nrow If more than one representation is present then they're plotted in a grid.
 #' By default \code{cowplot} will choose the number of rows, but this overrides.
-#' @param grid_nrow If more than one representation is present then they're plotted in a grid.
+#' @param grid_ncol If more than one representation is present then they're plotted in a grid.
 #' By default \code{cowplot} will choose the number of columns, but this overrides.
-#' @param standardize_ranges Logical. If plotting multiple representations it can be useful to have 
+#' @param use_cowplot Logical. Determines whether to use \code{\link[cowplot]{theme_cowplot}} or \code{\link[ggplot2]{theme_bw}}.
+#' @param standardize_ranges Logical. If plotting multiple representations it can be useful to have
 #' x and y lims that don't depend on the fit (so plots align correctly). If this is set to FALSE,
 #' \code{ggplot2} calculates the x and y limits. If this is set to TRUE, the x and y limits are set
 #' to the minimum and maximum of the X values plus or minus 6\% of the range between them.
-#' 
+#'
+#' @import ggplot2
+#' @importFrom rstan extract
+#' @importFrom cowplot theme_cowplot plot_grid
+#'
 #' @export
-posteriorCurvePlot <- function(X, fit, posterior_mean = TRUE, 
-                               nsamples = 50, nnt = 80, 
-                               point_colour = "darkred", 
+posteriorCurvePlot <- function(X, fit, posterior_mean = TRUE,
+                               nsamples = 50, nnt = 80,
+                               point_colour = "darkred",
                                curve_colour = "black", point_alpha = 1,
                                curve_alpha = 0.5,
-                               grid_nrow = NULL, grid_ncol = NULL, 
-                               use_cowplot = TRUE, 
-                               standardize_ranges = FALSE, ...) {
+                               grid_nrow = NULL, grid_ncol = NULL,
+                               use_cowplot = TRUE,
+                               standardize_ranges = FALSE) {
   if(is.matrix(X)) X <- list(X)
   Ns <- length(X) ## number of representations
   chains <- length(fit@inits)
@@ -80,9 +90,9 @@ posteriorCurvePlot <- function(X, fit, posterior_mean = TRUE,
 
   plots <- vector("list", Ns)
   # this is of dim trace-chain-cell
-  pst <- extract(fit, pars = "t", permute = FALSE)
-  lambda <- extract(fit, pars = "lambda", permute = FALSE)
-  sigma <- extract(fit, pars = "sigma", permute = FALSE)
+  pst <- rstan::extract(fit, pars = "t", permute = FALSE)
+  lambda <- rstan::extract(fit, pars = "lambda", permute = FALSE)
+  sigma <- rstan::extract(fit, pars = "sigma", permute = FALSE)
   for(i in 1:Ns) {
     l <- lambda[,,(2*i - 1):(2*i),drop=FALSE]
     s <- sigma[,,(2*i - 1):(2*i),drop=FALSE]
@@ -94,7 +104,11 @@ posteriorCurvePlot <- function(X, fit, posterior_mean = TRUE,
   return( gplt )
 }
 
+#' @import ggplot2
+#' @importFrom cowplot theme_cowplot
 #' @importFrom MCMCglmm posterior.mode
+#' @importFrom coda mcmc
+#' @importFrom dplyr arrange filter
 makeEnvelopePlot <- function(pst, l, s, x, chains, posterior_mean, ncurves, nnt,
                              point_colour = "darkred", curve_colour = "black",
                              point_alpha = 1, curve_alpha = 0.5,
@@ -103,9 +117,9 @@ makeEnvelopePlot <- function(pst, l, s, x, chains, posterior_mean, ncurves, nnt,
   curve_samples <- sample(n_posterior_samples, ncurves)
   pmcs <- lapply(1:chains, function(chain) {
     if(posterior_mean) {
-      tmap <- posterior.mode(mcmc(pst[,chain,]))
-      lmap <- posterior.mode(mcmc(l[,chain,]))
-      smap <- posterior.mode(mcmc(s[,chain,]))
+      tmap <- MCMCglmm::posterior.mode(coda::mcmc(pst[,chain,]))
+      lmap <- MCMCglmm::posterior.mode(coda::mcmc(l[,chain,]))
+      smap <- MCMCglmm::posterior.mode(coda::mcmc(s[,chain,]))
       return( list( posterior_mean_curve(x, tmap, lmap, smap, nnt) ) )
     } else {
       lapply(curve_samples, function(i) {
@@ -122,7 +136,7 @@ makeEnvelopePlot <- function(pst, l, s, x, chains, posterior_mean, ncurves, nnt,
   plt <- ggplot()
   plt <- plt + geom_point(data = data.frame(x), aes(x = x1, y = x2), shape = 21,
                           fill = point_colour, colour = 'white', size = 3, alpha = point_alpha) +
-    xlab("Component 1") + ylab("Component 2") 
+    xlab("Component 1") + ylab("Component 2")
   if(standardize_ranges) { # hard set x and y lims
     mins <- apply(x, 2, min)
     maxs <- apply(x, 2, max)
@@ -132,7 +146,7 @@ makeEnvelopePlot <- function(pst, l, s, x, chains, posterior_mean, ncurves, nnt,
     upper_lims <- maxs + pct_range_6
     plt <- plt + xlim(c(lower_lims[1], upper_lims[1])) + ylim(c(lower_lims[2], upper_lims[2]))
   }
-  
+
   if(use_cowplot) {
     plt <- plt + cowplot::theme_cowplot()
   } else {
@@ -166,27 +180,29 @@ makeEnvelopePlot <- function(pst, l, s, x, chains, posterior_mean, ncurves, nnt,
 }
 
 #' Plot MCMC diagnostics.
-#' 
+#'
 #' Plot basic MCMC diagnostics (traceplot and autocorrelation) of the log-posterior probability
 #' for a \code{stanfit} object.
-#' 
+#'
 #' Further assessment of convergence can be done using \code{rstan} functions.
-#' 
+#'
 #' @param fit A \code{stanfit} object
-#' @param arrange How to arrange the plots. If "vertical", traceplot and autocorrelation are 
+#' @param arrange How to arrange the plots. If "vertical", traceplot and autocorrelation are
 #' arranged in one column, while if "horizontal" traceplot and autocorrelation are arranged
 #' in one row.
 #' @export
-#' @importFrom cowplot plot_grid
-#' 
-#' @return A \code{ggplot2} object
 #'
+#' @importFrom cowplot plot_grid
+#' @importFrom rstan stan_trace stan_ac
+#' @importFrom methods is
+#'
+#' @return A \code{ggplot2} object
 plotDiagnostic <- function(fit, arrange = c("vertical", "horizontal")) {
-  stopifnot(is(fit, "stanfit"))
+  stopifnot(methods::is(fit, "stanfit"))
   arrange <- match.arg(arrange)
   nrow <- switch(arrange,
                  vertical = 2,
                  horizontal = 1)
-  plt <- cowplot::plot_grid(stan_trace(fit, "lp__"), stan_ac(fit, "lp__"), nrow = nrow)
+  plt <- cowplot::plot_grid(rstan::stan_trace(fit, "lp__"), rstan::stan_ac(fit, "lp__"), nrow = nrow)
   return(plt)
 }

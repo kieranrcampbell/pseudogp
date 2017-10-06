@@ -12,4 +12,3 @@ monocle_le
 The 'monocle' data comes from Trapnell et al. (2014) (\url{})
 }
 \keyword{datasets}
-

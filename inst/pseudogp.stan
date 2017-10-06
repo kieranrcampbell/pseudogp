@@ -20,7 +20,7 @@ data {
 
 transformed data {
   vector[N] mu;
-  for(i in 1:N) mu[i] <- 0;
+  for(i in 1:N) mu[i] = 0;
 }
 
 parameters {
@@ -39,13 +39,13 @@ model {
       // off-diagonal
       for(i in 1:(N-1)) {
           for(j in (i+1):N) {
-            Sigma[k,l,i,j] <- exp(-lambda[k,l] * pow(t[i] - t[j], 2));
-            Sigma[k,l,j,i] <- Sigma[k,l,i,j];
+            Sigma[k,l,i,j] = exp(-lambda[k,l] * pow(t[i] - t[j], 2));
+            Sigma[k,l,j,i] = Sigma[k,l,i,j];
         }
       }
       // diagonal
       for(m in 1:N) {
-        Sigma[k,l,m,m] <- 1 + sigma[k,l] + 10e-3;
+        Sigma[k,l,m,m] = 1 + sigma[k,l] + 10e-3;
       }
     }
   }

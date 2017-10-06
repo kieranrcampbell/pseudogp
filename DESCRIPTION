@@ -7,17 +7,27 @@ Author: Kieran Campbell <kieran.campbell@sjc.ox.ac.uk>
 Maintainer: Kieran Campbell <kieran.campbell@sjc.ox.ac.uk>
 Description: This package fits Bayesian Gaussian Process Latent Variable Models
     to low-dimensional representations of single-cell RNA-seq data.
-License: MIT
+License: MIT + file LICENSE
 LazyData: TRUE
 Suggests:
+    devtools,
     knitr,
-    cowplot
+    reshape2,
+    rmarkdown
 VignetteBuilder: knitr
 Depends:
-    rstan,
+    R (>= 3.0)
+Imports:
     coda,
+    cowplot,
+    dplyr,
+    ggplot2,
     matrixStats,
-    RColorBrewer,
     MCMCglmm,
-    princurve
-RoxygenNote: 5.0.1
+    methods,
+    princurve,
+    RColorBrewer,
+    rstan,
+    stats,
+    testthat
+RoxygenNote: 6.0.1

@@ -12,4 +12,3 @@ monocle_pca
 PCA representation of monocle data
 }
 \keyword{datasets}
-
