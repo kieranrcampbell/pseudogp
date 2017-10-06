@@ -10,7 +10,9 @@ Description: This package fits Bayesian Gaussian Process Latent Variable Models
 License: MIT + file LICENSE
 LazyData: TRUE
 Suggests:
+    devtools,
     knitr,
+    reshape2,
     rmarkdown
 VignetteBuilder: knitr
 Depends:
