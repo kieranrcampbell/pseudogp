@@ -5,10 +5,7 @@ test_that("Pseudogp works", {
   y <- x^2 + runif(100, -.1, .1)
   space <- standardize(cbind(x, y))
 
-  # do not expect error
-  expect_error({
-    fit <- fitPseudotime(space)
-  }, NA)
+  fit <- fitPseudotime(space)
 
   expect_is(fit, "stanfit")
 
@@ -18,7 +15,7 @@ test_that("Pseudogp works", {
   expect_is(g1, "ggplot")
   expect_is(g2, "ggplot")
 
-  # expect no errors
+  # expect no errors when printing the plots
   expect_error({
     pdf("/dev/null")
     print(g1)
