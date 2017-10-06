@@ -9,7 +9,7 @@
 #'
 #' @param X Either a ncells-by-2 reduced dimension matrix or \code{list} of such matrices
 #' corresponding to multiple representations.
-#' @param intialise_from How to initialise the MCMC chain. One of "random" (stan decides), 
+#' @param initialise_from How to initialise the MCMC chain. One of "random" (stan decides),
 #' "principal_curve", or "pca" (the first component of PCA rescaled is taken to be the pseudotimes).
 #' Note: if multiple representations are provided, \code{pseudogp} will take the principal curve or
 #' pca from the first rather than combining them. If a particular representation is required, it is
@@ -27,7 +27,7 @@
 #'
 #' @return An object of class \code{rstan::stan}, that contains posterior samples for the
 #' model parameters.
-#' 
+#'
 #' @importFrom princurve principal.curve
 #'
 #' @details This function essentially wraps the \code{rstan} function \code{stan}, and in doing so
@@ -47,7 +47,9 @@
 #'
 #'
 #' @export
-fitPseudotime <- function(X, initialise_from = c("random", "principal_curve", "pca"), smoothing_alpha = 10, smoothing_beta = 3,
+fitPseudotime <- function(X,
+                          initialise_from = c("random", "principal_curve", "pca"),
+                          smoothing_alpha = 10, smoothing_beta = 3,
                           pseudotime_mean = 0.5, pseudotime_var = 1,
                           chains = 1, iter = 1000, seed = sample.int(.Machine$integer.max, 1), ...) {
   ## find number of representations
@@ -125,22 +127,26 @@ fitPseudotime <- function(X, initialise_from = c("random", "principal_curve", "p
 }
 
 #' Column-wise standardize input data to mean 0 and variance 1
-#' 
+#'
+#' @param X data to standardize
+#'
+#' @importFrom stats sd
+#'
 #' @export
 standardize <- function(X) {
   X <- apply(X, 2, function(x) (x - mean(x)) / sd(x))
 }
 
-#' Convert the mean and variance of a gamma distribution
-#' to the alpha-beta parametrization
+# Convert the mean and variance of a gamma distribution
+# to the alpha-beta parametrization
 meanvar_to_alphabeta <- function(mean, var) {
   alpha <- mean^2 / var
   beta <- mean / var
   return(c(alpha, beta))
 }
 
-#' Calculate a double exponential covariance matrix
-#' with a diagonal noise component
+# Calculate a double exponential covariance matrix
+# with a diagonal noise component
 cov_matrix <- function(t1, t2, lambda, sigma = NULL) {
   n1 <- length(t1)
   n2 <- length(t2)
@@ -194,5 +200,5 @@ posterior_mean_curve <- function(X, t, l, s, nnt = 80) {
 #' t-SNE representation of monocle data
 "monocle_tsne"
 
-# #' Stan fit for laplacian eigenmaps representation of monocle
-# "le_fit"
+#' Stan fit for laplacian eigenmaps representation of monocle
+"le_fit"

@@ -7,7 +7,7 @@
 posteriorCurvePlot(X, fit, posterior_mean = TRUE, nsamples = 50, nnt = 80,
   point_colour = "darkred", curve_colour = "black", point_alpha = 1,
   curve_alpha = 0.5, grid_nrow = NULL, grid_ncol = NULL,
-  use_cowplot = TRUE, standardize_ranges = FALSE, ...)
+  use_cowplot = TRUE, standardize_ranges = FALSE)
 }
 \arguments{
 \item{X}{The representation(s) passed to \code{fitPseudotime} (either a matrix or
@@ -36,13 +36,15 @@ This is chosen as \eqn{(1 - \alpha) * exp(1 - nsamples) + \alpha}.}
 \item{grid_nrow}{If more than one representation is present then they're plotted in a grid.
 By default \code{cowplot} will choose the number of rows, but this overrides.}
 
+\item{grid_ncol}{If more than one representation is present then they're plotted in a grid.
+By default \code{cowplot} will choose the number of columns, but this overrides.}
+
+\item{use_cowplot}{Logical. Determines whether to use \code{\link[cowplot]{theme_cowplot}} or \code{\link[ggplot2]{theme_bw}}.}
+
 \item{standardize_ranges}{Logical. If plotting multiple representations it can be useful to have
 x and y lims that don't depend on the fit (so plots align correctly). If this is set to FALSE,
 \code{ggplot2} calculates the x and y limits. If this is set to TRUE, the x and y limits are set
 to the minimum and maximum of the X values plus or minus 6\% of the range between them.}
-
-\item{grid_nrow}{If more than one representation is present then they're plotted in a grid.
-By default \code{cowplot} will choose the number of columns, but this overrides.}
 }
 \description{
 Flexible methods for plotting posterior mean

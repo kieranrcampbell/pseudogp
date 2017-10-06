@@ -57,8 +57,9 @@ posteriorBoxplot <- function(fit, inner = 0.75, outer = 0.95) {
 #' This is chosen as \eqn{(1 - \alpha) * exp(1 - nsamples) + \alpha}.
 #' @param grid_nrow If more than one representation is present then they're plotted in a grid.
 #' By default \code{cowplot} will choose the number of rows, but this overrides.
-#' @param grid_nrow If more than one representation is present then they're plotted in a grid.
+#' @param grid_ncol If more than one representation is present then they're plotted in a grid.
 #' By default \code{cowplot} will choose the number of columns, but this overrides.
+#' @param use_cowplot Logical. Determines whether to use \code{\link[cowplot]{theme_cowplot}} or \code{\link[ggplot2]{theme_bw}}.
 #' @param standardize_ranges Logical. If plotting multiple representations it can be useful to have
 #' x and y lims that don't depend on the fit (so plots align correctly). If this is set to FALSE,
 #' \code{ggplot2} calculates the x and y limits. If this is set to TRUE, the x and y limits are set
