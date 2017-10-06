@@ -15,6 +15,8 @@ Suggests:
     dplyr,
     ggplot2
 VignetteBuilder: knitr
+Depends:
+    R (>= 3.0)
 Imports:
     cowplot,
     rstan,
